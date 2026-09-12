@@ -1,0 +1,12 @@
+{
+  "total_records": 100,
+  "total_anomalies": 5,
+  "anomalies": [
+    {
+      "Datetime": "2026-09-01 12:00:00",
+      "Consumption": 8.5,
+      "anomaly_score": -0.15,
+      "anomaly": 1
+    }
+  ]
+}
