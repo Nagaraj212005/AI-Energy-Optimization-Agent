@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.database.models import EnergyConsumption
+from backend.app.database.models import EnergyConsumption
 
 
 def get_dashboard_summary(db: Session):
@@ -28,3 +28,7 @@ def get_dashboard_summary(db: Session):
         "peak_consumption": round(peak_consumption or 0, 2),
         "total_records": total_records
     }
+
+
+def get_dashboard(db: Session):
+    return get_dashboard_summary(db)

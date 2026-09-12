@@ -1,13 +1,18 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.database.database import SessionLocal
-from app.services.agent_service import ai_agent_summary
+from backend.app.database.database import SessionLocal
+from backend.app.agents.energy_agent import ask_agent
 
 router = APIRouter(
     prefix="/agent",
     tags=["AI Agent"]
 )
+
+
+class Question(BaseModel):
+    question: str
 
 
 def get_db():
@@ -18,6 +23,6 @@ def get_db():
         db.close()
 
 
-@router.get("/")
-def agent(db: Session = Depends(get_db)):
-    return ai_agent_summary(db)
+@router.post("/")
+def chat(question: Question, db: Session = Depends(get_db)):
+    return ask_agent(question.question, db)

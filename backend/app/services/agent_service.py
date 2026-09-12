@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.database.models import EnergyConsumption
+from backend.app.database.models import EnergyConsumption
 
 
 def ai_agent_summary(db: Session):

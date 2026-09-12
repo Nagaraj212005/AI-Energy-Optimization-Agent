@@ -2,23 +2,6 @@
 forecast.py
 -----------
 Optimized PJM hourly energy-demand forecasting pipeline.
-
-This file reproduces the forecasting workflow developed in Colab:
-1. Load PJM hourly data
-2. Clean and sort data
-3. Create time/lag/rolling features
-4. Chronological train/test split
-5. Train optimized XGBoost
-6. Evaluate with MAE, RMSE, R2 and MAPE
-7. Save test predictions
-8. Save the trained model for the forecasting service
-
-Expected input columns:
-    Datetime
-    PJM_Load_MW
-
-Usage:
-    python forecast.py
 """
 
 from pathlib import Path
@@ -27,12 +10,15 @@ import pandas as pd
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-# -----------------------------
-# CONFIGURATION
-# -----------------------------
-DATA_FILE = "PJM_Load_hourly.csv"
-MODEL_FILE = "pjm_xgboost_model.json"
-TEST_RESULT_FILE = "PJM_test_forecast_results.csv"
+# -------------------------------------------------
+# PATH CONFIGURATION
+# -------------------------------------------------
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+DATA_FILE = BASE_DIR / "data" / "raw" / "PJM_Load_hourly.csv"
+MODEL_FILE = BASE_DIR / "pjm_xgboost_model.json"
+TEST_RESULT_FILE = BASE_DIR / "PJM_test_forecast_results.csv"
 
 TARGET = "PJM_Load_MW"
 
@@ -51,27 +37,25 @@ FEATURES = [
 ]
 
 
-def load_and_prepare_data(file_path: str) -> pd.DataFrame:
-    """Load PJM data and create forecasting features."""
+def load_and_prepare_data(file_path):
     df = pd.read_csv(file_path)
 
     required = {"Datetime", TARGET}
     missing = required - set(df.columns)
+
     if missing:
-        raise ValueError(
-            f"Missing required columns: {sorted(missing)}. "
-            f"Found columns: {df.columns.tolist()}"
-        )
+        raise ValueError(f"Missing required columns: {missing}")
 
     df["Datetime"] = pd.to_datetime(df["Datetime"], errors="coerce")
     df[TARGET] = pd.to_numeric(df[TARGET], errors="coerce")
 
     df = df.dropna(subset=["Datetime", TARGET])
-    df = df.sort_values("Datetime").drop_duplicates(
-        subset=["Datetime"], keep="first"
-    ).reset_index(drop=True)
+    df = (
+        df.sort_values("Datetime")
+        .drop_duplicates(subset=["Datetime"])
+        .reset_index(drop=True)
+    )
 
-    # Time features
     df["hour"] = df["Datetime"].dt.hour
     df["day_of_week"] = df["Datetime"].dt.dayofweek
     df["day_of_year"] = df["Datetime"].dt.dayofyear
@@ -79,13 +63,12 @@ def load_and_prepare_data(file_path: str) -> pd.DataFrame:
     df["year"] = df["Datetime"].dt.year
     df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)
 
-    # Historical demand features
     df["lag_1"] = df[TARGET].shift(1)
     df["lag_24"] = df[TARGET].shift(24)
     df["lag_168"] = df[TARGET].shift(168)
 
-    # Shift first to prevent the current target from leaking into rolling values
     shifted = df[TARGET].shift(1)
+
     df["rolling_24"] = shifted.rolling(24).mean()
     df["rolling_168"] = shifted.rolling(168).mean()
 
@@ -94,12 +77,12 @@ def load_and_prepare_data(file_path: str) -> pd.DataFrame:
     return df
 
 
-def train_and_evaluate(df: pd.DataFrame):
-    """Chronological split, train XGBoost, evaluate and save results."""
-    split_index = int(len(df) * 0.80)
+def train_and_evaluate(df):
 
-    train_df = df.iloc[:split_index].copy()
-    test_df = df.iloc[split_index:].copy()
+    split_index = int(len(df) * 0.8)
+
+    train_df = df.iloc[:split_index]
+    test_df = df.iloc[split_index:]
 
     X_train = train_df[FEATURES]
     y_train = train_df[TARGET]
@@ -107,20 +90,6 @@ def train_and_evaluate(df: pd.DataFrame):
     X_test = test_df[FEATURES]
     y_test = test_df[TARGET]
 
-    print("=" * 60)
-    print("PJM OPTIMIZED ENERGY FORECASTING")
-    print("=" * 60)
-    print(f"Dataset shape: {df.shape}")
-    print(f"Training rows: {len(train_df)}")
-    print(f"Testing rows : {len(test_df)}")
-    print()
-    print("Training period:")
-    print(train_df["Datetime"].iloc[0], "to", train_df["Datetime"].iloc[-1])
-    print()
-    print("Testing period:")
-    print(test_df["Datetime"].iloc[0], "to", test_df["Datetime"].iloc[-1])
-
-    # Optimized XGBoost configuration
     model = XGBRegressor(
         n_estimators=300,
         learning_rate=0.05,
@@ -129,13 +98,12 @@ def train_and_evaluate(df: pd.DataFrame):
         colsample_bytree=0.8,
         objective="reg:squarederror",
         tree_method="hist",
-        n_jobs=-1,
         random_state=42,
+        n_jobs=-1,
     )
 
-    print("\nTraining optimized XGBoost...")
-    model.fit(X_train, y_train, verbose=False)
-    print("Training completed successfully!")
+    print("Training XGBoost model...")
+    model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
 
@@ -144,35 +112,32 @@ def train_and_evaluate(df: pd.DataFrame):
     r2 = r2_score(y_test, y_pred)
     mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
 
-    print("\n" + "=" * 60)
-    print("FINAL FORECASTING RESULTS")
     print("=" * 60)
-    print(f"MAE : {mae:.2f} MW")
-    print(f"RMSE: {rmse:.2f} MW")
-    print(f"R2  : {r2:.4f}")
-    print(f"MAPE: {mape:.2f}%")
+    print("Forecast Metrics")
+    print("=" * 60)
+    print(f"MAE  : {mae:.2f}")
+    print(f"RMSE : {rmse:.2f}")
+    print(f"R2   : {r2:.4f}")
+    print(f"MAPE : {mape:.2f}%")
 
     results = test_df[["Datetime", TARGET]].copy()
     results["Forecast_MW"] = y_pred
     results.to_csv(TEST_RESULT_FILE, index=False)
 
-    model.save_model(MODEL_FILE)
+    model.save_model(str(MODEL_FILE))
 
-    print("\nSaved files:")
-    print(f"1. {TEST_RESULT_FILE}")
-    print(f"2. {MODEL_FILE}")
-
-    return model, results
+    print("\nSaved:")
+    print(TEST_RESULT_FILE)
+    print(MODEL_FILE)
 
 
 if __name__ == "__main__":
-    data_path = Path(DATA_FILE)
 
-    if not data_path.exists():
+    if not DATA_FILE.exists():
         raise FileNotFoundError(
-            f"Input file not found: {DATA_FILE}\n"
-            "Place PJM_Load_hourly.csv in the same folder as forecast.py."
+            f"Dataset not found:\n{DATA_FILE}"
         )
 
-    data = load_and_prepare_data(DATA_FILE)
-    train_and_evaluate(data)
+    df = load_and_prepare_data(DATA_FILE)
+
+    train_and_evaluate(df)

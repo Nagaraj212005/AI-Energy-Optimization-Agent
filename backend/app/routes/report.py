@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.database.database import SessionLocal
-from app.services.report_service import generate_report
+from backend.app.database.database import SessionLocal
+from backend.app.services.report_service import generate_report
 
 router = APIRouter(prefix="/report", tags=["Report"])
 

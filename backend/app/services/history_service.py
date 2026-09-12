@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.database.models import EnergyConsumption
+from backend.app.database.models import EnergyConsumption
 
 def get_history(db: Session):
 

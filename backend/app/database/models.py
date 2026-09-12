@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, Float, String, Boolean, DateTime
 
-from app.database.database import Base
-
+from backend.app.database.database import Base
 
 class EnergyConsumption(Base):
     __tablename__ = "energy_consumption"

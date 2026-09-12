@@ -1,17 +1,22 @@
+import sys
+from pathlib import Path
+
 from fastapi import FastAPI
 
-from app.database.database import Base, engine
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-# Import models so SQLAlchemy registers them
-from app.database import models
+from backend.app.database.database import Base, engine
+from backend.app.database import models
 
-from app.routes.dashboard import router as dashboard_router
-from app.routes.forecast import router as forecast_router
-from app.routes.anomaly import router as anomaly_router
-from app.routes.recommendation import router as recommendation_router
-from app.routes.history import router as history_router
-from app.routes.report import router as report_router
-from app.routes.agent import router as agent_router
+from backend.app.routes.dashboard import router as dashboard_router
+from backend.app.routes.forecast import router as forecast_router
+from backend.app.routes.anomaly import router as anomaly_router
+from backend.app.routes.recommendation import router as recommendation_router
+from backend.app.routes.history import router as history_router
+from backend.app.routes.report import router as report_router
+from backend.app.routes.agent import router as agent_router
+from backend.app.routes import recommendation
+from backend.app.routes import agent
 
 app = FastAPI(
     title="AI Energy Optimization Agent"
