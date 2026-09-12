@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+*.db
+*.sqlite3
+ml/trained_models/*
+!ml/trained_models/.gitkeep
