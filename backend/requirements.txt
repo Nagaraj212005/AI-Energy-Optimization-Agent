@@ -1,1 +1,14 @@
 # Add backend dependencies here.
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+xgboost
+sqlalchemy
+python-dotenv
+google-generativeai
+joblib
+pydantic
+python-multipart
+plotly

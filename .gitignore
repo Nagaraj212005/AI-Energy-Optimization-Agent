@@ -8,3 +8,22 @@ venv/
 *.sqlite3
 ml/trained_models/*
 !ml/trained_models/.gitkeep
+
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Database
+*.db
+
+# Data
+data/raw/
+data/processed/
+
+# VS Code
+.vscode/
+
+# Environment
+.env

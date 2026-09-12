@@ -1,0 +1,1 @@
+"""Energy history service operations."""

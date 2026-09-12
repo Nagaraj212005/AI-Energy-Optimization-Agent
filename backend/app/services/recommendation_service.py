@@ -1,0 +1,1 @@
+"""Energy recommendation service operations."""
