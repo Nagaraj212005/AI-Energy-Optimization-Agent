@@ -6,8 +6,9 @@ venv/
 .ipynb_checkpoints/
 *.db
 *.sqlite3
-ml/trained_models/*
-!ml/trained_models/.gitkeep
+# ml/trained_models/*
+# !ml/trained_models/.gitkeep
+ml/trained_models/recommendation_model.joblib
 
 
 # Python
