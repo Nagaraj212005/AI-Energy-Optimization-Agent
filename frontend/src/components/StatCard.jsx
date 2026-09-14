@@ -5,7 +5,7 @@ function StatCard({ label, value, suffix, icon: Icon, accent, trend }) {
     <motion.article
       whileHover={{ y: -3 }}
       transition={{ duration: 0.2 }}
-      className="surface rounded-2xl p-5"
+      className="surface min-w-0 rounded-2xl p-5"
     >
       <div className="flex items-start justify-between gap-4">
         <p className="text-[13px] text-slate-400">{label}</p>
@@ -13,7 +13,7 @@ function StatCard({ label, value, suffix, icon: Icon, accent, trend }) {
           <Icon size={18} />
         </div>
       </div>
-      <p className="mt-6 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+      <p className="mt-6 break-words text-2xl font-semibold tracking-tight text-white sm:text-3xl">
         {value}
         {suffix && <span className="ml-1 text-sm font-normal text-slate-500">{suffix}</span>}
       </p>

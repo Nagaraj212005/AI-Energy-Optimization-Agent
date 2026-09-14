@@ -1,4 +1,4 @@
-import { Activity, Database, Gauge, TrendingUp } from 'lucide-react';
+import { Activity, Database, Gauge, TrendingUp, WalletCards } from 'lucide-react';
 import { useMemo } from 'react';
 import ForecastChart from '../components/ForecastChart';
 import PanelState from '../components/PanelState';
@@ -8,6 +8,11 @@ import { useForecast } from '../hooks/useForecast';
 import { useHistory } from '../hooks/useHistory';
 
 const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+const currencyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
 
 function DashboardPage() {
   const { data, isLoading, error } = useDashboard();
@@ -28,7 +33,7 @@ function DashboardPage() {
         <div className="h-10 w-64 animate-pulse rounded-lg bg-white/[0.06]" />
         <div className="mt-3 h-4 w-96 max-w-full animate-pulse rounded bg-white/[0.04]" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[1, 2, 3, 4].map((item) => <div key={item} className="h-36 animate-pulse rounded-2xl bg-card" />)}
+          {[1, 2, 3, 4, 5].map((item) => <div key={item} className="h-36 animate-pulse rounded-2xl bg-card" />)}
         </div>
       </section>
     );
@@ -55,6 +60,7 @@ function DashboardPage() {
     { label: 'Average consumption', value: numberFormatter.format(data.average_consumption), suffix: 'kWh', icon: Gauge, accent: 'bg-emerald-400/10 text-emerald-300' },
     { label: 'Peak consumption', value: numberFormatter.format(data.peak_consumption), suffix: 'kWh', icon: TrendingUp, accent: 'bg-amber-400/10 text-amber-300' },
     { label: 'Total records', value: numberFormatter.format(data.total_records), icon: Database, accent: 'bg-cyan-400/10 text-cyan-300' },
+    { label: 'Estimated Energy Cost', value: currencyFormatter.format(Number.isFinite(Number(data.estimated_cost)) ? Number(data.estimated_cost) : 0), icon: WalletCards, accent: 'bg-violet-400/10 text-violet-300' },
   ];
 
   return (

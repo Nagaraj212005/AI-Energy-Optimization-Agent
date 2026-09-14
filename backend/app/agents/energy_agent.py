@@ -1,81 +1,50 @@
-from sqlalchemy.orm import Session
+from backend.app.agents.core.intent_classifier import classify_intent
+from backend.app.agents.core.reasoning_engine import reason
+from backend.app.agents.core.response_formatter import format_response
+from backend.app.agents.core.conversation_memory import conversation
+from backend.app.agents.llm.ollama_client import generate_response
 
-from backend.app.services.dashboard_service import get_dashboard_summary
-from backend.app.services.forecast_service import get_next_24_hour_forecast
-from backend.app.services.anomaly_service import detect_anomalies
-from backend.app.services.recommendation_service import detect_recommendations
-from backend.app.services.report_service import generate_report
-from backend.app.services.history_service import get_history
+class EnergyAgent:
+
+    def run(self, question):
+
+        # Step 1: Intent Classification
+        intent_data = classify_intent(question)
+        intent = intent_data["intent"]
+        confidence = intent_data["confidence"]
+
+        # Step 2: Save Conversation
+        conversation.update(question, intent)
+
+        # Step 3: Build Execution Plan
+        reasoning = reason(intent, question)
+
+        plan = reasoning["plan"]
+        results = reasoning["results"]
+
+        # Step 4: Format Response
+        response = format_response(intent, results)
 
 
-def ask_agent(question: str, db: Session):
-
-    question = question.lower().strip()
-
-    # Dashboard
-    if "dashboard" in question or "summary" in question:
+        ai_response = generate_response(
+            question,
+            response
+    )
+        # Step 5: Final Output
         return {
-            "module": "Dashboard",
-            "data": get_dashboard_summary(db)
+            "question": question,
+            "intent": intent,
+            "confidence": confidence,
+            "plan": plan,
+            "response": response,
+            "ai_response": ai_response
         }
 
-    # Forecast
-    elif "forecast" in question or "predict" in question:
-        return {
-            "module": "Forecast",
-            "data": get_next_24_hour_forecast()
-        }
 
-    # Anomaly Detection
-    elif "anomaly" in question or "outlier" in question:
-        return {
-            "module": "Anomaly Detection",
-            "data": detect_anomalies()
-        }
+# Global Agent Instance
+agent = EnergyAgent()
 
-    # Recommendation
-    elif (
-        "recommend" in question
-        or "optimization" in question
-        or "save energy" in question
-    ):
-        return {
-            "module": "Recommendation",
-            "data": detect_recommendations(db)
-        }
 
-    # Report
-    elif "report" in question:
-        return {
-            "module": "Report",
-            "data": generate_report(db)
-        }
-
-    # History
-    elif "history" in question:
-        return {
-            "module": "History",
-            "data": get_history(db)
-        }
-
-    # Help
-    else:
-        return {
-            "message": "AI Energy Optimization Assistant",
-            "supported_queries": [
-                "dashboard",
-                "forecast",
-                "anomaly",
-                "recommendation",
-                "report",
-                "history"
-            ],
-            "example_questions": [
-                "Show dashboard summary",
-                "Forecast next 24 hours",
-                "Detect anomalies",
-                "Give recommendations",
-                "Generate report",
-                "Show history"
-            ]
-        }
+# Compatibility Function
+def ask_agent(question):
+    return agent.run(question)

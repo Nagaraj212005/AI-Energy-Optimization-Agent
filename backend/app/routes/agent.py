@@ -10,10 +10,8 @@ router = APIRouter(
     tags=["AI Agent"]
 )
 
-
 class Question(BaseModel):
     question: str
-
 
 def get_db():
     db = SessionLocal()
@@ -21,7 +19,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 @router.post("/")
 def chat(question: Question, db: Session = Depends(get_db)):
